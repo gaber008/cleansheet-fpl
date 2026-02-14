@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CleanSheet - The 15-Minute FPL Planner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Color Palette - Monochromatic Blue (Reversed: Dark = Easy) */
+            --diff-1-2: #0D47A1;  /* Easiest - Very dark blue */
+            --diff-3: #1565C0;    /* Very easy - Dark blue */
+            --diff-4-5: #1976D2;  /* Easy - Medium-dark blue */
+            --diff-6: #1E88E5;    /* Medium - Medium blue */
+            --diff-7-8: #42A5F5;  /* Hard - Medium-light blue */
+            --diff-9: #90CAF9;    /* Very hard - Light blue */
+            --diff-10: #E3F2FD;   /* Hardest - Very light blue */
+            
+            /* Base Colors */
+            --primary-text: #2C3E50;
+            --secondary-text: #7F8C8D;
+            --background: #FFFFFF;
+            --surface: #F8F9FA;
+            --border: #E8E8E8;
+            --header-bg: #2C3E50;
+            
+            /* Position Colors */
+            --pos-gkp: #9cc6db;
+            --pos-def: #fcf6d9;
+            --pos-mid: #cf4b00;
+            --pos-fwd: #ff9b51;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: var(--background);
+            color: var(--primary-text);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 8px;
+        }
+
+        .tagline {
+            font-size: 1.1rem;
+            color: var(--secondary-text);
+            font-weight: 400;
+        }
+
+        .current-gw {
+            display: inline-block;
+            margin-top: 16px;
+            padding: 8px 16px;
+            background: var(--surface);
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: var(--secondary-text);
+        }
+
+        .current-gw strong {
+            color: var(--primary-text);
+            font-weight: 600;
+        }
+
+        /* Section Headers */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 40px 0 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--header-bg);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        .refresh-btn {
+            background: var(--header-bg);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+
+        .refresh-btn:hover {
+            opacity: 0.9;
+        }
+
+        .refresh-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Tables */
+        .table-wrapper {
+            overflow-x: auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        thead {
+            background: var(--header-bg);
+            color: white;
+        }
+
+        th {
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.85rem;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+
+        th.team-col { width: 100px; }
+        th.strength-col { width: 80px; text-align: center; }
+        th.fixture-col { width: 90px; text-align: center; }
+
+        td {
+            padding: 12px 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: var(--surface);
+        }
+
+        /* Fixture Cells */
+        .fixture-cell {
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: 8px 4px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .fixture-cell.blank {
+            color: var(--secondary-text);
+            background: transparent;
+        }
+
+        /* Difficulty Colors */
+        .diff-1-2 { background: var(--diff-1-2); color: white; }
+        .diff-3 { background: var(--diff-3); color: white; }
+        .diff-4-5 { background: var(--diff-4-5); color: white; }
+        .diff-6 { background: var(--diff-6); color: white; }
+        .diff-7-8 { background: var(--diff-7-8); color: var(--primary-text); }
+        .diff-9 { background: var(--diff-9); color: var(--primary-text); }
+        .diff-10 { background: var(--diff-10); color: var(--primary-text); }
+
+        /* Strength Indicator */
+        .strength-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+        }
+
+        .strength-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        /* Team ID Prompt */
+        .team-id-prompt {
+            position: sticky;
+            top: 20px;
+            margin: 40px auto;
+            max-width: 600px;
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            text-align: center;
+            z-index: 10;
+        }
+
+        .team-id-prompt h2 {
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+        }
+
+        .team-id-prompt p {
+            color: var(--secondary-text);
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .team-id-input-group {
+            display: flex;
+            gap: 12px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .team-id-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .team-id-input:focus {
+            outline: none;
+            border-color: var(--header-bg);
+        }
+
+        .submit-btn {
+            padding: 12px 24px;
+            background: var(--header-bg);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .submit-btn:hover {
+            opacity: 0.9;
+        }
+
+        .team-id-hint {
+            margin-top: 16px;
+            font-size: 0.85rem;
+            color: var(--secondary-text);
+        }
+
+        .team-id-hint a {
+            color: var(--header-bg);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* Position Badge */
+        .position-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .pos-gkp { background: var(--pos-gkp); color: var(--primary-text); }
+        .pos-def { background: var(--pos-def); color: var(--primary-text); }
+        .pos-mid { background: var(--pos-mid); color: white; }
+        .pos-fwd { background: var(--pos-fwd); color: var(--primary-text); }
+
+        /* Legend */
+        .legend {
+            margin: 40px 0;
+            padding: 24px;
+            background: var(--surface);
+            border-radius: 8px;
+        }
+
+        .legend-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .legend-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--secondary-text);
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border);
+            border-top-color: var(--header-bg);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Hidden */
+        .hidden {
+            display: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            .tagline { font-size: 1rem; }
+            .section-title { font-size: 1.2rem; }
+            table { font-size: 0.8rem; }
+            th, td { padding: 10px 6px; }
+            .fixture-col:nth-child(n+9) { display: none; } /* Hide GW 5-8 on mobile */
+            .team-id-prompt { padding: 24px; }
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--secondary-text);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border);
+            margin-top: 60px;
+        }
+
+        footer a {
+            color: var(--header-bg);
+            text-decoration: none;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>CleanSheet</h1>
+            <p class="tagline">The 15-minute FPL planner</p>
+            <div class="current-gw hidden" id="currentGW">
+                Current Gameweek: <strong id="gwNumber">--</strong>
+            </div>
+        </header>
+
+        <!-- Premier League Fixtures -->
+        <div class="section-header">
+            <h2 class="section-title">Premier League Fixtures</h2>
+            <button class="refresh-btn" id="refreshBtn" onclick="refreshData()">
+                🔄 Refresh
+            </button>
+        </div>
+
+        <div id="fixturesLoading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading fixtures...</p>
+        </div>
+
+        <div id="fixturesTable" class="table-wrapper hidden">
+            <table>
+                <thead id="fixturesHeader">
+                    <!-- Dynamic headers -->
+                </thead>
+                <tbody id="fixturesBody">
+                    <!-- Dynamic rows -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Team ID Prompt -->
+        <div id="teamIdPrompt" class="team-id-prompt hidden">
+            <h2>View Your Team</h2>
+            <p>Enter your FPL Team ID to see your players' fixtures and form</p>
+            <div class="team-id-input-group">
+                <input 
+                    type="number" 
+                    id="teamIdInput" 
+                    class="team-id-input" 
+                    placeholder="e.g., 368422"
+                    onkeypress="if(event.key==='Enter') loadMyTeam()"
+                >
+                <button class="submit-btn" onclick="loadMyTeam()">Load Team</button>
+            </div>
+            <p class="team-id-hint">
+                Find your Team ID in your FPL URL:<br>
+                <code>fantasy.premierleague.com/entry/<strong>YOUR_ID</strong>/event/X</code>
+            </p>
+        </div>
+
+        <!-- My Team -->
+        <div id="myTeamSection" class="hidden">
+            <div class="section-header">
+                <h2 class="section-title">My Team</h2>
+                <button class="refresh-btn" onclick="loadMyTeam()">
+                    🔄 Refresh Team
+                </button>
+            </div>
+
+            <div id="myTeamLoading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Loading your team...</p>
+            </div>
+
+            <div id="myTeamTable" class="table-wrapper hidden">
+                <table>
+                    <thead id="teamHeader">
+                        <!-- Dynamic headers -->
+                    </thead>
+                    <tbody id="teamBody">
+                        <!-- Dynamic rows -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+            <div class="legend-title">Fixture Difficulty Key (Darker Blue = Easier)</div>
+            <div class="legend-items">
+                <div class="legend-item diff-1-2">Easiest (1-2)</div>
+                <div class="legend-item diff-3">Very Easy (3)</div>
+                <div class="legend-item diff-4-5">Easy (4-5)</div>
+                <div class="legend-item diff-6">Medium (6)</div>
+                <div class="legend-item diff-7-8">Hard (7-8)</div>
+                <div class="legend-item diff-9">Very Hard (9)</div>
+                <div class="legend-item diff-10">Hardest (10)</div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <p>Data from <a href="https://fantasy.premierleague.com" target="_blank">Fantasy Premier League</a></p>
+            <p>CleanSheet is not affiliated with or endorsed by the Premier League or Fantasy Premier League</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
