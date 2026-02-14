@@ -2,9 +2,13 @@
 
 // Configuration
 const FPL_API_BASE = 'https://fantasy.premierleague.com/api/';
+const CORS_PROXY = 'https://api.allorigins.win/raw?url='; // CORS proxy fallback
 const BOOTSTRAP_URL = FPL_API_BASE + 'bootstrap-static/';
 const TEAM_URL = (teamId) => FPL_API_BASE + `entry/${teamId}/`;
 const FIXTURES_URL = FPL_API_BASE + 'fixtures/';
+
+// Try direct first, fall back to CORS proxy
+let useCorsProxy = false;
 
 // Default team ratings (can be customized)
 const DEFAULT_TEAM_RATINGS = {
@@ -25,6 +29,33 @@ let userTeamId = null;
 
 // Initialize on page load
 window.addEventListener('DOMContentLoaded', init);
+
+// Helper function to fetch with CORS proxy fallback
+async function fetchWithCors(url) {
+    try {
+        // Try direct fetch first
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.log('Direct fetch failed, trying CORS proxy...', error);
+        
+        // Fall back to CORS proxy
+        try {
+            const proxiedUrl = CORS_PROXY + encodeURIComponent(url);
+            const response = await fetch(proxiedUrl);
+            if (!response.ok) {
+                throw new Error(`Proxy HTTP ${response.status}`);
+            }
+            return await response.json();
+        } catch (proxyError) {
+            console.error('Both direct and proxy fetch failed:', proxyError);
+            throw new Error('Unable to fetch FPL data. The API may be down or blocking requests.');
+        }
+    }
+}
 
 async function init() {
     // Check for team ID in URL or localStorage
@@ -54,9 +85,11 @@ async function refreshData() {
     refreshBtn.textContent = '⏳ Loading...';
     
     try {
-        // Fetch bootstrap data
-        const bootstrapResponse = await fetch(BOOTSTRAP_URL);
-        bootstrapData = await bootstrapResponse.json();
+        console.log('Fetching FPL data...');
+        
+        // Fetch bootstrap data with CORS fallback
+        bootstrapData = await fetchWithCors(BOOTSTRAP_URL);
+        console.log('Bootstrap data loaded successfully');
         
         currentGW = getCurrentGameweek(bootstrapData);
         
@@ -67,9 +100,9 @@ async function refreshData() {
         // Initialize team ratings from FPL data
         initializeTeamRatings(bootstrapData);
         
-        // Fetch fixtures
-        const fixturesResponse = await fetch(FIXTURES_URL);
-        fixturesData = await fixturesResponse.json();
+        // Fetch fixtures with CORS fallback
+        fixturesData = await fetchWithCors(FIXTURES_URL);
+        console.log('Fixtures data loaded successfully');
         
         // Render fixtures table
         renderFixturesTable();
@@ -84,7 +117,28 @@ async function refreshData() {
         
     } catch (error) {
         console.error('Error loading data:', error);
-        alert('Failed to load FPL data. Please try again.');
+        
+        // More helpful error message
+        let errorMsg = 'Failed to load FPL data. ';
+        if (error.message.includes('API may be down')) {
+            errorMsg += 'The FPL API may be temporarily down or blocking requests from this domain. ';
+        } else {
+            errorMsg += error.message + ' ';
+        }
+        errorMsg += '\n\nPlease try again in a few seconds, or check if fantasy.premierleague.com is accessible.';
+        
+        alert(errorMsg);
+        
+        // Show error in the loading area
+        document.getElementById('fixturesLoading').innerHTML = `
+            <p style="color: red;">❌ Error loading data</p>
+            <p style="font-size: 0.9rem; color: var(--secondary-text);">
+                The FPL API may be temporarily down or blocking requests.<br>
+                <button onclick="refreshData()" style="margin-top: 16px; padding: 10px 20px; background: var(--header-bg); color: white; border: none; border-radius: 6px; cursor: pointer;">
+                    Try Again
+                </button>
+            </p>
+        `;
     } finally {
         refreshBtn.disabled = false;
         refreshBtn.textContent = '🔄 Refresh';
@@ -290,21 +344,45 @@ async function loadMyTeam() {
     document.getElementById('teamIdPrompt').classList.add('hidden');
     
     try {
-        // Fetch team data
-        const teamResponse = await fetch(TEAM_URL(userTeamId));
-        const teamData = await teamResponse.json();
+        console.log('Fetching team data for ID:', userTeamId);
         
-        // Fetch current picks
-        const picksResponse = await fetch(TEAM_URL(userTeamId) + `event/${currentGW}/picks/`);
-        const picksData = await picksResponse.json();
+        // Fetch team data with CORS fallback
+        const teamData = await fetchWithCors(TEAM_URL(userTeamId));
+        
+        // Fetch current picks with CORS fallback
+        const picksData = await fetchWithCors(TEAM_URL(userTeamId) + `event/${currentGW}/picks/`);
+        
+        console.log('Team data loaded successfully');
         
         // Render team table
         renderTeamTable(picksData.picks);
         
     } catch (error) {
         console.error('Error loading team:', error);
-        alert('Failed to load team. Please check your Team ID and try again.');
+        
+        let errorMsg = 'Failed to load team. ';
+        if (error.message.includes('404')) {
+            errorMsg += 'Team ID not found. Please check your ID and try again.';
+        } else if (error.message.includes('API may be down')) {
+            errorMsg += 'The FPL API may be temporarily down.';
+        } else {
+            errorMsg += 'Please check your Team ID and try again.';
+        }
+        
+        alert(errorMsg);
         document.getElementById('myTeamLoading').classList.add('hidden');
+        
+        // Show error message
+        document.getElementById('myTeamLoading').innerHTML = `
+            <p style="color: red;">❌ Error loading team</p>
+            <p style="font-size: 0.9rem; color: var(--secondary-text);">
+                ${errorMsg}<br>
+                <button onclick="loadMyTeam()" style="margin-top: 16px; padding: 10px 20px; background: var(--header-bg); color: white; border: none; border-radius: 6px; cursor: pointer;">
+                    Try Again
+                </button>
+            </p>
+        `;
+        document.getElementById('myTeamLoading').classList.remove('hidden');
     }
 }
 
